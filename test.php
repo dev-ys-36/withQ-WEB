@@ -1,9 +1,12 @@
 <?php
 
-date_default_timezone_set('Asia/Seoul');
+if (date_default_timezone_get() != 'Asia/Seoul'){
+	date_default_timezone_set('Asia/Seoul');
+}
 
 include './vendor/autoload.php';
 include './HttpServerManager.php';
+include './MainLogger.php';
 include './utils/DataManager.php';
 
 use React\Http\HttpServer;
@@ -12,13 +15,8 @@ use React\Socket\SocketServer;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-function getTime(): string{
-	return '[' . date("H-i-s") . '] ';
-}
 
-# ---------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------
+$logger = new MainLogger();
 
 $https = new HttpServer(
 	function(ServerRequestInterface $request): Response{
@@ -38,24 +36,15 @@ $httpsSocket = new SocketServer(
 );
 $https->listen($httpsSocket);
 
-echo getTime() . 'HTTPS 정상 작동' . "\n";
+$httpsSocket->on('error', function(Exception $e){
+	$logger::text('HTTPS SERVER FAIL, ' . $e->getMessage());
+});
 
-/*$https_socket->on('error', function (Exception $e) {
-    echo 'Error: ' . $e->getMessage() . PHP_EOL;
-});*/
+$logger::text($logger::COLOR_GREEN . 'HTTPS SERVER SUCCESS' . $logger::FORMAT_RESET);
 
-# ---------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------
 
 $http = new HttpServer(
 	function(ServerRequestInterface $request): Response{
-		$path = $request->getUri()->getPath();
-		$clear_path = '/' . implode('/', array_filter(explode('/', $path)));
-		$ip = $request->getServerParams()['REMOTE_ADDR'];
-		
-		echo getTime() . $ip . ', status: redirect, url: ' . $clear_path . "\n";
-		
 		return Response::html(file_get_contents('html/redirect/redirect.html'));
 	}
 );
@@ -63,6 +52,10 @@ $http = new HttpServer(
 $httpSocket = new SocketServer('0.0.0.0:80');
 $http->listen($httpSocket);
 
-echo getTime() . 'HTTP 정상 작동' . "\n";
+$httpSocket->on('error', function(Exception $e){
+	$logger::text('HTTP SERVER FAIL, ' . $e->getMessage());
+});
+
+$logger::text($logger::COLOR_GREEN . 'HTTP SERVER SUCCESS' . $logger::FORMAT_RESET);
 
 ?>
