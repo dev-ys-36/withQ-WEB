@@ -12,8 +12,9 @@ class HttpServerManager{
 
     protected $serverParams;
 
-    public function __construct(ServerRequestInterface $request){
+    protected $urlList;
 
+    public function __construct(ServerRequestInterface $request){
         $this->request = $request;
 
         $this->path = $request->getUri()->getPath();
@@ -21,92 +22,54 @@ class HttpServerManager{
 
         $this->serverParams = $request->getServerParams();
 
+        $logger = new utils\MainLogger();
+        $logger::text($logger::COLOR_GREEN . $this->serverParams['REMOTE_ADDR'] . ' | url=' . $this->clearPath . $logger::FORMAT_RESET);
     }
 
     public function getTime(): string{
-
         return '[' . date("H-i-s") . '] ';
-
     }
 
-    /*public function onRequest(): Response{
+    public function getLoginStatus($info): bool{
         
-        //$ip = $this->serverParams['REMOTE_ADDR'];
-
-        //echo $this->getTime() . $ip . ', status: join, url: ' . $this->clearPath . "\n";
-
-        if ($this->clearPath === '/'){
-
-            return Response::plaintext("Hello World");
-
-            //return Response::html(file_get_contents('html/warning/system_url.html'));
-
-        }
-
-    }*/
+    }
 
     public function onRequest(): Response{
 
         $ip = $this->serverParams['REMOTE_ADDR'];
+        $logger = new utils\MainLogger();
     
-        $login = new utils\DataManager('/root/web/datas/login.json', utils\DataManager::JSON);
+        $login = new utils\DataManager($logger::getServerPath() . '/datas/login.json', utils\DataManager::JSON);
         $db['login'] = $login->getAll();
     
-        //$data = new utils\DataManager('/root/main/plugin_data/Email_Authentication/data.json', utils\DataManager::JSON);
-        //$db['data'] = $data->getAll();
-        $db['data'] = [];
-    
-        //echo $this->getTime() . $ip . ', status: join, url: ' . $this->clearPath . "\n";
+        $data = new utils\DataManager($logger::getServerPath() . '/datas/data.json', utils\DataManager::JSON);
+        $db['data'] = $data->getAll();
     
         if ($this->clearPath === '/'){
     
             if (isset($db['login'][$ip])){
     
                 $a = [];
-                exec("php /root/web/html/main/index.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
+                exec("php " . $logger::getServerPath() . "/html/main/index.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
 
                 return Response::html(implode("\n", $a));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    implode("\n", $a)
-                );*/
-    
+
             }
     
             $a = [];
-            exec("php /root/web/html/main/index.php", $a);
+            exec("php " . $logger::getServerPath() . "/html/main/index.php", $a);
 
             return Response::html(implode("\n", $a));
-    
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                implode("\n", $a)
-            );*/
     
         }else if ($this->clearPath === '/login'){
     
             if (isset($db['login'][$ip])){
 
-                return Response::html(file_get_contents('html/login/login_success.html'));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    file_get_contents('html/login/login_success.html')
-                );*/
-    
+                return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login_success.html'));
+
             }
 
-            return Response::html(file_get_contents('html/login/login.html'));
-    
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/login/login.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login.html'));
     
         }else if ($this->clearPath === '/logout'){
     
@@ -117,23 +80,11 @@ class HttpServerManager{
                 $login->setAll($db['login']);
                 $login->save();
 
-                return Response::html(file_get_contents('html/login/logout_success.html'));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    file_get_contents('html/login/logout_success.html')
-                );*/
+                return Response::html(file_get_contents($logger::getServerPath() . '/html/login/logout_success.html'));
     
             }
 
-            return Response::html(file_get_contents('html/login/logout_fail.html'));
-    
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/login/logout_fail.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/login/logout_fail.html'));
     
         }else if ($this->clearPath === '/login_check' and $this->request->getMethod() == "POST"){
     
@@ -151,33 +102,15 @@ class HttpServerManager{
                     $login->setAll($db['login']);
                     $login->save();
 
-                    return Response::html(file_get_contents('html/login/login_success.html'));
-    
-                    /*return new React\Http\Message\Response(
-                        200,
-                        array('Content-Type' => 'text/html'),
-                        file_get_contents('html/login/login_success.html')
-                    );*/
+                    return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login_success.html'));
     
                 }
 
-                return Response::html(file_get_contents('html/login/login_fail.html'));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    file_get_contents('html/login/login_fail.html')
-                );*/
+                return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login_fail.html'));
     
             }
 
-            return Response::html(file_get_contents('html/login/login_fail.html'));
-    
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/login/login_fail.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login_fail.html'));
         
         }else if ($this->clearPath === '/write_check' and $this->request->getMethod() == "POST"){
     
@@ -186,7 +119,7 @@ class HttpServerManager{
                 $title = $this->request->getParsedBody()['title'];
                 $content = $this->request->getParsedBody()['content'];
     
-                $board_data = new utils\DataManager('/root/web/datas/board_data.json', utils\DataManager::JSON);
+                $board_data = new utils\DataManager($logger::getServerPath() . '/datas/board_data.json', utils\DataManager::JSON);
                 $db['board_data'] = $board_data->getAll();
     
                 if (!isset($db['board_data']['num-count']) or !isset($db['board_data']['board-data'])){
@@ -209,7 +142,7 @@ class HttpServerManager{
                 $board_data->save();
     
                 $a = [];
-                exec("php /root/web/html/board/board_index.php", $a);
+                exec("php " . $logger::getServerPath() . "/html/board/board_index.php", $a);
 
                 return Response::html(implode("\n", $a));
     
@@ -221,7 +154,7 @@ class HttpServerManager{
     
             }
 
-            return Response::html(file_get_contents('html/login/login_fail.html'));
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/login/login_fail.html'));
     
             /*return new React\Http\Message\Response(
                 200,
@@ -234,25 +167,13 @@ class HttpServerManager{
             if (isset($db['login'][$ip])){
     
                 $a = [];
-                exec("php /root/web/html/main/profile.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
+                exec("php " . $logger::getServerPath() . "/html/main/profile.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
 
                 return Response::html(implode("\n", $a));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    implode("\n", $a)
-                );*/
         
             }
 
-            return Response::html(file_get_contents('html/warning/unknown_error.html'));
-        
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/warning/unknown_error.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/warning/unknown_error.html'));
     
         }else if (substr($this->clearPath, 0, 7) === '/board/'){
     
@@ -263,28 +184,17 @@ class HttpServerManager{
                 if (isset($db['login'][$ip])){
     
                     $a = [];
-                    exec("php /root/web/html/board/board_write.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
+                    exec("php " . $logger::getServerPath() . "/html/board/board_write.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
 
                     return Response::html(implode("\n", $a));
-                
-                    /*return new React\Http\Message\Response(
-                        200,
-                        array('Content-Type' => 'text/html'),
-                        implode("\n", $a)
-                    );*/
+
                 }
 
-                return Response::html(file_get_contents('html/warning/unknown_error.html'));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    file_get_contents('html/warning/unknown_error.html')
-                );*/
-    
+                return Response::html(file_get_contents($logger::getServerPath() . '/html/warning/unknown_error.html'));
+
             }
     
-            $board_data = new utils\DataManager('/root/web/datas/board_data.json', utils\DataManager::JSON);
+            $board_data = new utils\DataManager($logger::getServerPath() . '/datas/board_data.json', utils\DataManager::JSON);
             $db['board_data'] = $board_data->getAll();
     
             foreach($db['board_data']['board-data'] as $datas => $type){
@@ -299,68 +209,38 @@ class HttpServerManager{
                     $a = [];
     
                     if (isset($db['login'][$ip])){
-                        exec("php /root/web/html/board/board_read.php {$path_} " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'] . "", $a);
+                        exec("php " . $logger::getServerPath() . "/html/board/board_read.php {$path_} " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'] . "", $a);
                     }else{
-                        exec("php /root/web/html/board/board_read.php {$path_}", $a);
+                        exec("php " . $logger::getServerPath() . "/html/board/board_read.php {$path_}", $a);
                     }
 
                     return Response::html(implode("\n", $a));
-    
-                    /*return new React\Http\Message\Response(
-                        200,
-                        array('Content-Type' => 'text/html'),
-                        implode("\n", $a)
-                    );*/
-            
+                    
                 }
     
             }
 
-            return Response::html(file_get_contents('html/warning/system_url.html'));
-    
-            /*return new React\Http\Message\Response(
-                404,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/warning/system_url.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/warning/system_url.html'));
     
         }else if ($this->clearPath === '/board'){
     
             if (isset($db['login'][$ip])){
     
                 $a = [];
-                exec("php /root/web/html/board/board_index.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
+                exec("php " . $logger::getServerPath() . "/html/board/board_index.php " . $db['login'][$ip]['username'] . " " . $db['login'][$ip]['e-mail'], $a);
 
                 return Response::html(implode("\n", $a));
-    
-                /*return new React\Http\Message\Response(
-                    200,
-                    array('Content-Type' => 'text/html'),
-                    implode("\n", $a)
-                );*/
-        
+
             }
-    
+
             $a = [];
-            exec("php /root/web/html/board/board_index.php", $a);
+            exec("php " . $logger::getServerPath() . "/html/board/board_index.php", $a);
 
             return Response::html(implode("\n", $a));
-    
-            /*return new React\Http\Message\Response(
-                200,
-                array('Content-Type' => 'text/html'),
-                implode("\n", $a)
-            );*/
-            
+
         }else{
 
-            return Response::html(file_get_contents('html/warning/system_url.html'));
-    
-            /*return new React\Http\Message\Response(
-                404,
-                array('Content-Type' => 'text/html'),
-                file_get_contents('html/warning/system_url.html')
-            );*/
+            return Response::html(file_get_contents($logger::getServerPath() . '/html/warning/system_url.html'));
             
         }
 

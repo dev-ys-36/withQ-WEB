@@ -15,7 +15,8 @@ use React\Socket\SocketServer;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-$logger = new utils\MainLogger(__DIR__);
+$logger = new utils\MainLogger();
+$logger::setServerPath(__DIR__);
 
 # https -----------------------------------------------------------------------------------------------------
 

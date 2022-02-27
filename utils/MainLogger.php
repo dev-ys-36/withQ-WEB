@@ -32,22 +32,30 @@ class MainLogger{
     public const COLOR_WHITE = "\x1b[38;5;231m";
     public const COLOR_MINECOIN_GOLD = "\x1b[38;5;184m";
 
-    public static string $path;
+    protected static string $path;
 
-    public function __construct(string $path){
+    public function __construct(/*string $path*/){
+        /*self::$path = $path;*/
+    }
+
+    public static function setServerPath($path): void{
         self::$path = $path;
     }
 
-    public static function getDate(): string{
+    public static function getServerPath(): string{
+        return self::$path;
+    }
+
+    public static function getServerDate(): string{
         return date('Y-m-d');
     }
 
-    public static function getTime(): string{
+    public static function getServerTime(): string{
         return date('H:i:s');
     }
 
     public static function text(string $text): void{
-        $log_txt = '[' . self::getTime() . '] ' . $text;
+        $log_txt = '[' . self::getServerTime() . '] ' . $text;
 
 		self::logger($log_txt);
 
@@ -59,7 +67,7 @@ class MainLogger{
             @mkdir(self::$path . '/log', 0777);
         }
 
-		$log_file = fopen(self::$path . '/log/' . self::getDate() . '.txt', 'a');
+		$log_file = fopen(self::$path . '/log/' . self::getServerDate() . '.txt', 'a');
 
 		fwrite($log_file, $logger . "\r\n");
 		fclose($log_file);
